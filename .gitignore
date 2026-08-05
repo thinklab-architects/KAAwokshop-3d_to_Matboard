@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Node
+web/node_modules/
+web/tsconfig.tsbuildinfo
+
+# 使用者上傳與轉檔結果 —— 每個人的模型只留在自己機器上
+storage/
+logs/
+out/
+
+# 內附的執行環境與 SDK —— 體積大、有各自的授權條款，不入版控，
+# 但**發佈資料夾時要一起打包**：使用者不必安裝任何東西就靠這兩個目錄。
+runtime/
+vendor/
+
+# 本機專用設定（含各人的絕對路徑），不入版控
+.claude/settings.local.json
+
+# Windows
+Thumbs.db
+desktop.ini
