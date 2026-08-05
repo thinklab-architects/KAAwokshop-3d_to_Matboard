@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>建材彙整網頁 Matboard | 王澄音 | THINKLAB</title>
+<script>/* freeze the gradient drift before first paint when capturing with ?qa */
+if(/(\?|&)(qa|print)\b/.test(location.search))document.documentElement.className='noanim';</script>
+<style>
+/* ============================================================
+   THINKLAB deck — design language lifted from 20260424_AI沙龍
+   band gradient #8592C5 → transparent, white body,
+   Microsoft JhengHei UI, periwinkle accents
+   ============================================================ */
+:root{
+  --pw:#7684C0;          /* periwinkle — primary */
+  --pw-d:#414E8C;        /* deep periwinkle — headings on white */
+  --pw-l:#9AA6D2;        /* light periwinkle — rules, bullets */
+  --tint:#F1F4FC;        /* card tint */
+  --tint-b:#D3DAF0;      /* card border */
+  --navy:#0A1A46;
+  --ink:#12172A;         /* body ink — deliberately dark, decks carry a lot of text */
+  --body:#2B3247;        /* paragraph text */
+  --muted:#525A72;       /* secondary text — still passes on white */
+  --W:1600px;
+  --H:900px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:#20232E;
+  font-family:"Microsoft JhengHei UI","Microsoft JhengHei","PingFang TC","Noto Sans TC",
+              "Segoe UI",Arial,sans-serif;
+  color:var(--ink);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- stage ---------- */
+#viewport{position:fixed;inset:0;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:var(--W);height:var(--H);
+       transform-origin:center center;background:#fff;box-shadow:0 24px 80px rgba(0,0,0,.55)}
+.slide{position:absolute;inset:0;background:#fff;opacity:0;visibility:hidden;
+       transition:opacity .28s ease}
+.slide.on{opacity:1;visibility:visible}
+
+/* ---------- signature gradient band ----------
+   Four near-identical periwinkles crossfade on a 64s loop, so the header
+   drifts in hue without ever reading as an animation. The base layer under
+   them guarantees the band is never lighter than the deepest stop.        */
+.band{position:absolute;left:0;top:0;width:100%;height:22%;overflow:hidden;
+  background:linear-gradient(180deg,#7684C0 0%,#7684C0 26%,rgba(118,132,192,.62) 56%,
+             rgba(118,132,192,.20) 80%,rgba(118,132,192,0) 100%);}
+.slide.tall .band{height:30%}
+.band i{position:absolute;inset:0;opacity:0}
+/* only the slide on screen animates — 57 idle bands would otherwise each hold a layer */
+.slide.on .band i{animation:bandcycle 64s ease-in-out infinite}
+.band i:nth-child(1){animation-delay:-0s;
+  background:linear-gradient(180deg,#7684C0 0%,#7684C0 26%,rgba(118,132,192,.62) 56%,
+             rgba(118,132,192,.20) 80%,rgba(118,132,192,0) 100%)}
+.band i:nth-child(2){animation-delay:-16s;
+  background:linear-gradient(180deg,#6E86C6 0%,#6E86C6 26%,rgba(110,134,198,.62) 56%,
+             rgba(110,134,198,.20) 80%,rgba(110,134,198,0) 100%)}
+.band i:nth-child(3){animation-delay:-32s;
+  background:linear-gradient(180deg,#8280C2 0%,#8280C2 26%,rgba(130,128,194,.62) 56%,
+             rgba(130,128,194,.20) 80%,rgba(130,128,194,0) 100%)}
+.band i:nth-child(4){animation-delay:-48s;
+  background:linear-gradient(180deg,#6F8EBE 0%,#6F8EBE 26%,rgba(111,142,190,.62) 56%,
+             rgba(111,142,190,.20) 80%,rgba(111,142,190,0) 100%)}
+@keyframes bandcycle{
+  0%{opacity:0} 7%{opacity:1} 25%{opacity:1} 32%{opacity:0} 100%{opacity:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .band i,.slide.on .band i{animation:none}
+  .band i:nth-child(1){opacity:1}
+}
+/* .noanim freezes the drift — used by prefers-reduced-motion and by ?qa capture */
+.noanim .band i,.noanim .slide.on .band i{animation:none}
+.noanim .band i:nth-child(1){opacity:1}
+
+/* ---------- header ---------- */
+.hd{position:absolute;left:52px;right:52px;top:26px;display:flex;
+    justify-content:space-between;align-items:flex-start;gap:40px}
+.kicker{font-size:21px;font-weight:400;color:#fff;letter-spacing:.055em;
+        line-height:1.35;opacity:.95}
+.hd h1{font-size:35px;font-weight:700;color:#fff;line-height:1.3;
+       letter-spacing:.01em;margin-top:2px;max-width:1120px}
+.hd h1 .lt{font-weight:400}
+.brand{font-size:27px;font-weight:700;color:#fff;text-align:right;
+       line-height:1.16;letter-spacing:.03em;white-space:nowrap;flex:none}
+
+/* ---------- body region ---------- */
+.body{position:absolute;left:52px;right:52px;top:224px;bottom:66px}
+/* text-only slides: stack from the top so the block keeps the deck's rhythm,
+   instead of stretching cards into hollow boxes */
+.body.vc{display:flex;flex-direction:column;justify-content:flex-start;padding-top:34px}
+.slide.tall .body{top:300px}
+
+/* ---------- footer ---------- */
+.ft{position:absolute;left:52px;right:52px;bottom:24px;display:flex;
+    justify-content:space-between;font-size:15px;color:#6B7288;letter-spacing:.05em}
+
+/* ---------- typography helpers ---------- */
+.lead{font-size:20px;color:var(--muted);line-height:1.7}
+.stmt{font-size:32px;font-weight:700;color:var(--navy);line-height:1.42}
+.mega{font-size:52px;font-weight:700;color:var(--pw);line-height:1.24;letter-spacing:.01em}
+.note{font-size:21px;font-weight:700;color:var(--ink);line-height:1.62}
+.chain{font-size:20px;color:var(--pw-d);letter-spacing:.04em}
+.quote{font-size:23px;color:var(--pw-d);line-height:1.6;font-style:italic}
+.hl{color:var(--pw)}
+
+/* ---------- cards ---------- */
+.card{background:var(--tint);border:1px solid var(--tint-b);border-radius:7px;
+      padding:14px 16px;display:flex;flex-direction:column;min-height:0}
+.card h3{font-size:17px;font-weight:700;color:var(--pw-d);line-height:1.35;margin-bottom:7px}
+.card p{font-size:14.5px;color:var(--body);line-height:1.62}
+.shot{width:100%;background:#fff;border:1px solid var(--tint-b);border-radius:5px;
+      overflow:hidden;flex:1 1 auto;min-height:0}
+.shot img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+.tile{display:flex;flex-direction:column;gap:9px;min-height:0}
+/* keep every card heading on the same baseline across a row */
+.tile>div:last-child{flex:none;min-height:78px}
+
+/* image3.gif ships with black side padding — crop to its content box */
+.gcrop{position:relative;overflow:hidden;margin:auto;background:#fff;
+       border:1px solid var(--tint-b);border-radius:5px}
+.gcrop img{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+           width:160.8%;height:103.6%;max-width:none;display:block}
+
+/* ---------- video ---------- */
+.vwrap{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px}
+.vwrap video{flex:1 1 auto;width:100%;min-height:0;object-fit:contain;background:#0F1220;
+             border-radius:7px}
+.vcap{font-size:17px;color:var(--pw-d);letter-spacing:.03em;flex:none}
+
+/* ---------- grids ---------- */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:26px;height:100%}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+/* cards size to their text and centre in the space instead of stretching hollow.
+   height:auto also cancels the height:100% that .g2 carries. */
+.hug{align-content:center;height:auto}
+.col{display:flex;flex-direction:column;min-height:0}
+
+/* ---------- cover / section divider / app cover ---------- */
+#cover,.cover{background:linear-gradient(165deg,#2E3766 0%,#5D6CAE 34%,#7C89C0 62%,#A9B4DC 100%);
+              background-size:180% 180%;background-position:0% 0%;
+              animation:coverdrift 90s ease-in-out infinite alternate}
+@keyframes coverdrift{from{background-position:0% 0%} to{background-position:100% 100%}}
+@media (prefers-reduced-motion:reduce){#cover,.cover{animation:none}}
+.noanim #cover,.noanim .cover{animation:none}
+/* export screenshots (?print) don't want the on-screen chrome baked in */
+.noanim #hint,.noanim #bar{display:none}
+#cover .band,.cover .band{display:none}
+.cover .mark{position:absolute;right:96px;bottom:74px;text-align:right;color:#fff;
+             font-size:40px;font-weight:700;line-height:1.14;letter-spacing:.04em}
+.cover .rule{width:150px;height:2px;background:rgba(255,255,255,.55);margin:30px 0 20px}
+
+/* ---------- numbered steps ---------- */
+.num{width:32px;height:32px;border-radius:50%;background:var(--pw);color:#fff;font-size:16px;
+     font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.num.sm{width:25px;height:25px;font-size:13px}
+.steps{display:flex;flex-direction:column;gap:13px}
+.step{display:grid;grid-template-columns:32px 1fr;gap:13px;align-items:start}
+.step.sm{grid-template-columns:25px 1fr;gap:11px}
+.step h4{font-size:17.5px;font-weight:700;color:var(--navy);line-height:1.3;margin-bottom:3px}
+.step.sm h4{font-size:16px}
+.step p{font-size:14.5px;color:var(--body);line-height:1.6}
+
+/* ---------- tables ---------- */
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+.tbl th{background:var(--tint);color:var(--pw-d);font-weight:700;text-align:left;
+        padding:9px 14px;border-bottom:1px solid var(--tint-b)}
+.tbl td{padding:9px 14px;border-bottom:1px solid #EEF0F7;color:var(--body);line-height:1.55;
+        vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.total td{font-weight:700;color:var(--navy);background:var(--tint)}
+.tbl td.n,.tbl th.n{text-align:right}
+.tbl td.k{color:var(--ink);font-weight:700;white-space:nowrap}
+
+/* ---------- footnote band ---------- */
+.fn{background:var(--tint);border:1px solid var(--tint-b);border-radius:7px;padding:12px 18px;
+    font-size:15px;color:var(--body);line-height:1.65}
+.fn b{color:var(--pw-d);font-weight:700}
+
+/* ---------- stats ---------- */
+.figure{font-size:42px;font-weight:700;color:var(--pw);line-height:1}
+.figure-l{font-size:13.5px;color:var(--muted);margin-top:6px;line-height:1.4}
+
+/* ---------- bullet list ---------- */
+.bl{list-style:none;display:flex;flex-direction:column;gap:7px}
+.bl li{font-size:14.5px;color:var(--body);line-height:1.6;padding-left:15px;position:relative}
+.bl li::before{content:"";position:absolute;left:0;top:.62em;width:5px;height:5px;
+               border-radius:50%;background:var(--pw-l)}
+.bl.tight li{font-size:17px;line-height:1.5}
+
+/* ---------- UI mock-ups ---------- */
+.mock{background:#F7F8FC;border:1px solid var(--tint-b);border-radius:8px;padding:13px;
+      display:flex;flex-direction:column;gap:10px;min-height:0}
+.mrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{background:#fff;border:1px solid var(--tint-b);border-radius:5px;padding:5px 10px;
+      font-size:12.5px;color:var(--body);white-space:nowrap}
+.chip.on{background:var(--pw);border-color:var(--pw);color:#fff;font-weight:700}
+.chip.gh{background:transparent;border-color:transparent;color:#6B7288}
+.fld{background:#fff;border:1px solid var(--tint-b);border-radius:5px;padding:4px 10px;min-width:0}
+.fld span{display:block;font-size:13px;color:#6B7288;letter-spacing:.04em}
+.fld b{display:block;font-size:16px;color:var(--ink);font-weight:400;white-space:nowrap}
+.pane{background:#fff;border:1px solid var(--tint-b);border-radius:6px;padding:10px;
+      min-height:0;display:flex;flex-direction:column}
+.pane>.t{font-size:12.5px;color:var(--pw-d);font-weight:700;margin-bottom:8px;flex:none}
+.mcap{font-size:16px;color:var(--muted);text-align:center;line-height:1.5}
+.canvas{background:#EEF1F9;border:1px solid var(--tint-b);border-radius:5px;
+        position:relative;flex:1 1 auto;min-height:0}
+.pin{position:absolute;width:26px;height:26px;border-radius:50%;font-size:13px;font-weight:700;
+     display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);
+     background:#fff;color:var(--body);border:1px solid var(--tint-b)}
+.pin.on{background:var(--pw);color:#fff;border-color:var(--pw)}
+.pcard{background:#fff;border:1px solid var(--tint-b);border-radius:5px;padding:8px 10px}
+.pcard .h{font-size:16px;color:var(--ink);font-weight:700}
+.pcard .s{font-size:11.5px;color:#6B7288;margin-top:2px}
+.pcard .st{font-size:11.5px;color:var(--pw-d);margin-top:2px}
+.thumb{background:#EEF1F9;border-radius:4px;height:52px}
+
+/* ============================================================
+   SECTION 01 components (Retooling deck)
+   ============================================================ */
+.card.acc{background:#E9EDFA;border-color:var(--pw-l)}
+.xref{font-size:16px;color:var(--pw-d);margin-top:10px;padding-top:9px;
+      border-top:1px solid var(--tint-b)}
+.pull{font-size:18px;font-weight:700;color:var(--navy);line-height:1.6;margin-top:12px}
+.eg{font-size:16px;color:var(--muted);line-height:1.6;margin-top:10px}
+.before{font-size:16px;color:var(--pw-d);margin-top:9px}
+.se{font-size:15px;letter-spacing:.13em;color:var(--muted);font-weight:700}
+.figure{font-size:44px;font-weight:700;color:var(--pw-d);line-height:1.05}
+.card.acc .figure{color:#2F3C86}
+.unit{font-size:18px;color:var(--muted);margin-left:6px}
+.cmd{font-size:17px;color:var(--navy);line-height:1.7;font-weight:700}
+
+/* four-layer stack (slide 04) */
+.layer{display:grid;grid-template-columns:112px 200px 1fr;gap:16px;align-items:center;
+       background:#fff;border:1px solid var(--tint-b);border-radius:7px;padding:10px 16px}
+.layer.acc{background:#E9EDFA;border-color:var(--pw-l)}
+.layer.dash{border-style:dashed;background:var(--tint)}
+.lk{font-size:15px;letter-spacing:.1em;color:var(--muted)}
+.lt{font-size:21px;font-weight:700;color:var(--navy)}
+.ld{font-size:16px;color:var(--body);line-height:1.5}
+
+/* 27-tool grids (slides 01 / 05 / 14) */
+.hubgrid{display:grid;grid-template-columns:repeat(9,1fr);gap:9px}
+.mcell{background:#fff;border:1px solid var(--tint-b);border-radius:6px;padding:9px 10px;
+       display:flex;flex-direction:column;justify-content:space-between;min-height:96px}
+.mcell .mn{font-size:15px;letter-spacing:.08em;color:var(--muted)}
+.mcell .mcp{color:var(--pw-d);font-weight:700}
+.mcell .mt{font-size:17px;font-weight:700;color:var(--ink);line-height:1.25}
+.mcell .md{font-size:15px;color:var(--muted);margin-top:3px;line-height:1.4}
+.t-cad{background:#FBF5EA}.t-chk{background:#EFF4EC}.t-col{background:#EDF1FA}.t-ai{background:#FAEFEC}
+.minigrid{display:grid;grid-template-columns:repeat(9,1fr);gap:6px}
+.minigrid .mcell{min-height:34px;padding:5px 6px;border-color:rgba(255,255,255,.34);
+                 background:rgba(255,255,255,.16)}
+.minigrid .mn{font-size:12px;color:rgba(255,255,255,.72)}
+.minigrid .mcp{font-size:12px;color:#fff}
+.lchip{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.lchip i{width:14px;height:14px;border-radius:3px;display:inline-block;
+         border:1px solid var(--tint-b);font-style:normal;line-height:1}
+
+/* tool list rows (slides 06 / 07) */
+.toollist{display:flex;flex-direction:column}
+.trow{display:grid;grid-template-columns:44px 200px 1fr;gap:14px;align-items:baseline;
+      padding:9px 4px;border-bottom:1px solid var(--tint-b)}
+.trow:last-child{border-bottom:none}
+.tn{font-size:15px;color:var(--muted)}
+.tt{font-size:20px;font-weight:700;color:var(--ink)}
+.tt em{font-style:normal;font-size:15px;letter-spacing:.08em;color:var(--pw-d);
+       border:1px solid var(--pw-l);border-radius:4px;padding:1px 5px;margin-left:7px;vertical-align:2px}
+.td{font-size:17px;color:var(--body);line-height:1.55}
+
+/* flow / box diagrams (slides 06 / 08 / 10) */
+.flow{display:flex;align-items:stretch;gap:10px}
+.fbox{background:#fff;border:1px solid var(--tint-b);border-radius:7px;padding:11px 14px;
+      display:flex;flex-direction:column;gap:3px;flex:1;text-align:center;justify-content:center}
+.fbox b{font-size:18px;color:var(--ink)}
+.fbox span{font-size:15px;color:var(--muted);letter-spacing:.05em}
+.fbox.on{background:#E9EDFA;border-color:var(--pw)}
+.fbox.on b{color:var(--navy)}
+.farr{display:flex;align-items:center;color:var(--pw-l);font-size:22px}
+.apibar{background:var(--tint);border:1px solid var(--pw-l);border-radius:7px;padding:12px;
+        text-align:center}
+.apibar b{display:block;font-size:20px;letter-spacing:.14em;color:var(--navy)}
+.apibar span{font-size:15px;letter-spacing:.1em;color:var(--muted)}
+.tbox{background:#fff;border:1px solid var(--tint-b);border-radius:6px;padding:11px 8px;
+      text-align:center;font-size:17px;font-weight:700;color:var(--ink)}
+.tbox.on{background:#E9EDFA;border-color:var(--pw);color:var(--navy)}
+.siteread{background:#fff;border:1px solid var(--tint-b);border-radius:6px;padding:10px}
+
+/* ranking bars (slide 11) */
+.ranks{display:flex;flex-direction:column;gap:9px}
+.rk{display:grid;grid-template-columns:150px 1fr 56px;gap:14px;align-items:center}
+.rn{font-size:17px;color:var(--ink);text-align:right}
+.rb{background:#EDEFF7;border-radius:3px;height:22px;overflow:hidden;display:block}
+.rb i{display:block;height:100%;background:#3E4A86;border-radius:3px}
+.rv{font-size:17px;color:var(--body);text-align:right}
+
+/* ============================================================
+   WORKSHOP SECTION — larger type throughout.
+   Presented to a room, so nothing here drops below ~18px.
+   ============================================================ */
+/* bigger type needs more clearance above the footer */
+.lg .body{bottom:80px}
+.lg .body.vc{padding-top:16px}
+.lg .kicker{font-size:23px}
+.lg .hd h1{font-size:38px}
+.lg .lead{font-size:23px;line-height:1.7}
+.lg .card h3{font-size:22px;line-height:1.35;margin-bottom:9px}
+.lg .card p{font-size:19px;line-height:1.65}
+.lg .bl li{font-size:19px;line-height:1.65;padding-left:19px}
+.lg .bl li::before{width:6px;height:6px;top:.66em}
+.lg .bl.tight li{font-size:18px;line-height:1.6}
+.lg .step h4{font-size:22px;margin-bottom:5px}
+.lg .step p{font-size:19px;line-height:1.65}
+.lg .step.sm h4{font-size:21px}
+.lg .steps{gap:17px}
+.lg .num{width:38px;height:38px;font-size:19px}
+.lg .num.sm{width:30px;height:30px;font-size:16px}
+.lg .step{grid-template-columns:38px 1fr;gap:16px}
+.lg .step.sm{grid-template-columns:30px 1fr;gap:14px}
+.lg .tbl{font-size:19px}
+.lg .tbl th{padding:12px 18px}
+.lg .tbl td{padding:12px 18px;line-height:1.6}
+.lg .fn{font-size:19px;line-height:1.7;padding:14px 20px}
+.lg .figure{font-size:48px}
+.lg .figure-l{font-size:17px}
+.lg .mcap{font-size:17px}
+.lg .stmt{font-size:30px}
+
+/* mock-ups: still UI-like, but readable from the back of the room */
+.lg .chip{font-size:16px;padding:7px 13px;border-radius:6px}
+.lg .fld{padding:6px 13px;border-radius:6px}
+.lg .fld span{font-size:15px}
+.lg .fld b{font-size:17px}
+.lg .pane>.t{font-size:16px;margin-bottom:10px}
+.lg .pcard{padding:10px 13px}
+.lg .pcard .h{font-size:17px}
+.lg .pcard .s,.lg .pcard .st{font-size:16px}
+.lg .pin{width:32px;height:32px;font-size:16px}
+.lg .mock{padding:16px;gap:12px}
+.cv{position:absolute;left:96px;top:0;bottom:0;display:flex;flex-direction:column;
+    justify-content:center;gap:0;color:#fff}
+.cv .eyebrow{font-size:23px;letter-spacing:.14em;opacity:.9}
+.cv .big{font-size:82px;font-weight:700;letter-spacing:.02em;line-height:1.1;margin-top:26px}
+.cv .zh{font-size:31px;letter-spacing:.24em;margin-top:14px;opacity:.94}
+.cv .who{font-size:24px;letter-spacing:.1em;margin-top:52px;opacity:.9}
+#cover .mark{position:absolute;right:96px;bottom:74px;text-align:right;color:#fff;
+          font-size:40px;font-weight:700;line-height:1.14;letter-spacing:.04em}
+
+/* ---------- S1 stat ---------- */
+.stat{border:1px solid var(--tint-b);background:var(--tint);border-radius:7px;
+      padding:14px 18px;display:flex;align-items:baseline;gap:14px}
+.stat b{font-size:38px;color:var(--pw);font-weight:700;line-height:1}
+.stat span{font-size:14.5px;color:var(--muted);line-height:1.5}
+
+/* ---------- S2 workflow diagram ---------- */
+.diagram{position:relative;width:800px;height:544px}
+.diagram svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.dlabel{position:absolute;text-align:right;font-size:21px;font-weight:700;
+        color:var(--pw);line-height:1.2}
+.dbox{position:absolute;border:2.5px dashed var(--pw-l);border-radius:14px;
+      display:flex;align-items:center;justify-content:center}
+.dbox.hard{border:4px dotted var(--pw-d)}
+.dtext{position:absolute;font-size:33px;font-weight:700;color:var(--pw-d);
+       line-height:1.16;text-align:center}
+.dtext em{font-style:normal;color:#9CC4D8;display:block}
+.dsmall{position:absolute;font-size:15.5px;font-weight:700;color:var(--muted);
+        line-height:1.5}
+.dbig{position:absolute;font-size:31px;font-weight:700;color:var(--ink);letter-spacing:.02em}
+.dmid{position:absolute;font-size:20px;font-weight:700;color:var(--pw-l);
+      line-height:1.4;text-align:center}
+
+/* ---------- S11 transition list ---------- */
+.shift{border-top:1px solid var(--tint-b);border-bottom:1px solid var(--tint-b);
+       padding:12px 0;display:flex;flex-direction:column;gap:5px}
+.shift div{display:grid;grid-template-columns:140px 40px 1fr;align-items:center;
+           font-size:17px;color:var(--body)}
+.shift div span:nth-child(2){color:var(--pw);text-align:center;font-weight:700}
+.shift div.hdr{font-size:18px;font-weight:700;color:var(--pw-d)}
+
+/* ---------- chrome: progress, counter, overview ---------- */
+#bar{position:fixed;left:0;top:0;height:3px;background:var(--pw);z-index:60;
+     transition:width .28s ease}
+#hint{position:fixed;left:0;right:0;bottom:10px;text-align:center;color:#6C7288;
+      font-size:12px;z-index:60;letter-spacing:.05em;transition:opacity .5s ease}
+#hint.dim{opacity:0}
+#ov{position:fixed;inset:0;background:#1A1D28;z-index:80;display:none;
+    overflow:auto;padding:28px}
+#ov.on{display:block}
+#ovg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.ovi{background:#fff;border-radius:5px;overflow:hidden;cursor:pointer;position:relative;
+     aspect-ratio:16/9;border:2px solid transparent}
+.ovi:hover{border-color:var(--pw)}
+.ovi .mini{transform-origin:top left;pointer-events:none}
+.ovi b{position:absolute;right:6px;bottom:4px;font-size:11px;color:#6B7288;z-index:2}
+</style>
+</head>
+<body>
+
+<div id="bar"></div>
+<div id="viewport"><div id="stage">
+
+<!-- ============================== 00 COVER ============================== -->
+<!-- ==================================================================
+     SECTION 01 · Retooling the Architecture Office with AI  (14 頁)
+     ================================================================== -->
+
+<!-- RT 01 cover -->
+<!-- ==================================================================
+     Replace everything from here down to the last </section> with your
+     own slides. Three specimens follow: a cover, a standard content
+     page, and a full-bleed video page.
+
+     Keep the `lg` class on every section — it carries the large type
+     scale that makes the deck readable when projected.
+     ================================================================== -->
+
+<!-- ---------- cover ---------- -->
+<!-- ==================================================================
+     建材彙整網頁 Matboard · 王澄音   —   slides 01–06
+     THINKLAB periwinkle system. All extra CSS is scoped under `.mb`
+     (a class carried by every section below) so it cannot leak.
+     ================================================================== -->
+<style>
+/* ---- scoped: Matboard part 1 ------------------------------------ */
+.mb .mb-eyebrow{font-size:23px;letter-spacing:.16em;font-weight:700;opacity:.92}
+.mb .ft.mb-ftw{color:rgba(255,255,255,.72)}
+
+/* Latin kickers: letter-spaced uppercase, not the CJK wide-space look */
+.mb .kicker.mb-lat{font-size:21px;font-weight:700;letter-spacing:.24em;
+  text-transform:uppercase;opacity:.92}
+
+/* section label inside a card / above a row */
+.mb .mb-tag{display:inline-block;font-size:19px;font-weight:700;letter-spacing:.12em;
+  color:var(--pw-d);margin-bottom:8px}
+.mb .mb-tag.off{color:#7C8397;letter-spacing:.12em}
+.mb .mb-label{font-size:21px;font-weight:700;color:var(--pw-d);letter-spacing:.02em}
+
+/* slide 03 numbered cards */
+.mb .mb-ncard{gap:0}
+.mb .mb-ncard .num{margin-bottom:14px}
+.mb .mb-ncard h3{font-size:26px;color:var(--navy);margin-bottom:10px}
+
+/* slide 03 emphasis bar — the source sets the figures larger than the run */
+.mb .mb-bar{font-size:21px;line-height:1.9;color:var(--body);text-align:center}
+.mb .mb-bar b{font-size:34px;font-weight:700;color:var(--pw-d)}
+
+/* slide 04 flow */
+.mb .flow{align-items:stretch}
+.mb .fbox{padding:16px 14px;gap:6px}
+.mb .fbox b{font-size:23px;font-weight:700}
+.mb .fbox span{font-size:19px;color:var(--muted);letter-spacing:.02em}
+.mb .farr{font-size:28px;color:var(--pw)}
+.mb .mb-note{font-size:20px;color:var(--pw-d);line-height:1.6;font-style:italic}
+
+/* slide 04 stat panel */
+.mb .mb-stats{display:flex;flex-direction:column;justify-content:center;gap:26px;
+  margin-top:16px;flex:1 1 auto}
+.mb .mb-statrow{display:flex;align-items:baseline;gap:18px}
+.mb .mb-statrow .figure{font-size:52px;color:var(--pw-d);line-height:1}
+.mb .mb-statrow span{font-size:20px;color:var(--muted)}
+
+/* slide 05 rejected vs adopted */
+.mb .mb-rej{background:#F6F7FA;border-color:#E2E5EE}
+.mb .mb-rej h3{color:#6E7488}
+.mb .mb-rej .bl li{color:#767C90}
+.mb .mb-rej .bl li::before{background:#B9BFCE}
+.mb .mb-choice h3{font-size:29px;line-height:1.3;margin-bottom:14px}
+
+/* slide 06 four-step row */
+.mb .mb-step{background:#fff;border:1px solid var(--tint-b);border-radius:7px;
+  padding:14px 16px}
+.mb .mb-step b{display:block;font-size:22px;font-weight:700;color:var(--navy);
+  line-height:1.3}
+.mb .mb-step span{display:block;font-size:19px;color:var(--muted);
+  line-height:1.5;margin-top:6px}
+.mb .mb-close{font-size:20px;color:var(--muted);font-style:italic;line-height:1.6}
+</style>
+
+<!-- ============================== 01 · COVER ============================== -->
+<section class="slide cover lg mb">
+  <div class="cv">
+    <div class="eyebrow mb-eyebrow">Claude Code WebAPP開發</div>
+    <div class="big" style="font-size:74px;line-height:1.12;margin-top:22px">建材彙整網頁 Matboard</div>
+    <div class="zh" style="font-size:28px;letter-spacing:.04em;margin-top:20px">SketchUp 模型　→　建材資料</div>
+    <div class="rule"></div>
+    <div class="who" style="margin-top:0;font-size:24px;line-height:1.7">
+      王澄音<br>2026.08.06
+    </div>
+  </div>
+  <div class="mark">THINKLAB<br>2026</div>
+</section>
+
+<!-- ============================== 02 · 講者 ============================== -->
+<section class="slide lg mb">
+  <div class="band"></div>
+  <div class="hd">
+    <div><h1>王澄音 Cheng-Yin, Wang</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <!-- 聯絡資訊卡片在公開版移除：其中只有個人 Email，不放上公開網站 -->
+    <div class="g2 hug" style="height:auto;grid-template-columns:1fr;gap:30px;margin-top:26px">
+      <div class="card" style="padding:26px 30px">
+        <h3 style="font-size:24px;letter-spacing:.04em;margin-bottom:16px">學經歷</h3>
+        <ul class="bl" style="gap:12px">
+          <li>東海大學建築系（2022~2027）</li>
+          <li>劉培森建築師事務所　實習生（2025.07~2025.08）</li>
+          <li>Think Lab之物建築　實習生（2026.06~2026.08）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>02 / 24</span></div>
+</section>
+
+<!-- ============================== 03 · WHY ============================== -->
+<section class="slide lg mb">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker mb-lat">WHY</p>
+      <h1>開發動機</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:24px">模型裡有材質、尺寸資訊，為什麼還要再做一個網站？</p>
+    <div class="g3 hug" style="gap:24px">
+      <div class="card mb-ncard" style="padding:22px 24px">
+        <div class="num">1</div>
+        <h3>數量靠人工</h3>
+        <p>一面一面點選、抄尺寸、貼進 Excel。設計改一次必須整份重新對照確認。</p>
+      </div>
+      <div class="card mb-ncard" style="padding:22px 24px">
+        <div class="num">2</div>
+        <h3>資料讀不出來</h3>
+        <p>材質、圖層、屬性都在檔案裡，需要額外花費心力整理成表。</p>
+      </div>
+      <div class="card mb-ncard" style="padding:22px 24px">
+        <div class="num">3</div>
+        <h3>對方打不開檔</h3>
+        <p>若業主與施工單位沒有模型，溝通時較難直接理解討論的材質在案件中的確切位置。</p>
+      </div>
+    </div>
+    <div class="fn" style="margin-top:26px;padding:18px 22px">
+      <div class="mb-bar">參考模型：<b>890</b> 區塊　<b>13</b> 種材質　<b>5,705.91</b> m²　—　逐面抄寫不現實，也難以複核。</div>
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>03 / 24</span></div>
+</section>
+
+<!-- ============================== 04 · WHAT ============================== -->
+<section class="slide lg mb">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker mb-lat">WHAT</p>
+      <h1>系統目標</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:24px">上傳模型，在瀏覽器裡取得材質、尺寸與建材彙整。</p>
+    <div style="display:grid;grid-template-columns:1fr 400px;gap:30px;align-items:stretch">
+
+      <div class="col" style="gap:22px">
+        <div class="flow">
+          <div class="fbox"><b>.skp 檔案</b><span>你的 SketchUp 模型</span></div>
+          <div class="farr">→</div>
+          <div class="fbox"><b>網站讀檔</b><span>取出材質與尺寸</span></div>
+          <div class="farr">→</div>
+          <div class="fbox on"><b>瀏覽器</b><span>3D 預覽 ＋ 彙整表</span></div>
+        </div>
+        <p class="mb-note">讀檔在網站端完成 —— 觀看者不必安裝 SketchUp。</p>
+        <div class="card" style="padding:22px 26px">
+          <ul class="bl" style="gap:13px">
+            <li>每個面的材質、長寬與實際面積</li>
+            <li>牆面／地板／天花／屋頂自動分類</li>
+            <li>可匯出 PDF 報表與 Excel 表格</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card acc" style="padding:24px 28px">
+        <h3 style="font-size:23px;letter-spacing:.03em">得到的是什麼</h3>
+        <div class="mb-stats">
+          <div class="mb-statrow"><div class="figure">890</div><span>區塊</span></div>
+          <div class="mb-statrow"><div class="figure">13</div><span>種材質</span></div>
+          <div class="mb-statrow"><div class="figure">3</div><span>種匯出格式</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>04 / 24</span></div>
+</section>
+
+<!-- ============================== 05 · HOW IT STARTED ============================== -->
+<section class="slide lg mb">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker mb-lat">HOW IT STARTED</p>
+      <h1>由誰來閱讀模型？</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:28px">做成 SketchUp 外掛，還是讓網站自己讀檔。</p>
+    <div class="g2 hug" style="height:auto;gap:34px">
+
+      <div class="card mb-rej mb-choice" style="padding:26px 30px">
+        <span class="mb-tag off">否決</span>
+        <h3>做成 SketchUp 外掛</h3>
+        <ul class="bl" style="gap:13px">
+          <li>每台電腦都要裝 SketchUp</li>
+          <li>桌面軟體必須一直開著</li>
+          <li>分享給別人就失效</li>
+        </ul>
+      </div>
+
+      <div class="card acc mb-choice" style="padding:26px 30px;border-width:2px;border-color:var(--pw)">
+        <span class="mb-tag">採用</span>
+        <h3>讓網站自己讀檔</h3>
+        <ul class="bl" style="gap:13px">
+          <li>上傳後由網站直接處理</li>
+          <li>使用者只需要一個瀏覽器</li>
+          <li>以後要加功能，修改網站即可</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>05 / 24</span></div>
+</section>
+
+<!-- ============================== 06 · HOW IT WORKS ============================== -->
+<section class="slide lg mb">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker mb-lat">HOW IT WORKS</p>
+      <h1>網站怎麼讀 .skp</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:20px">.skp 是 SketchUp 的專屬格式，一般程式打不開。</p>
+
+    <div class="g2 hug" style="height:auto;gap:28px">
+      <div class="card acc" style="padding:22px 26px">
+        <span class="mb-tag">採用的做法</span>
+        <h3 style="font-size:25px;margin-bottom:10px">使用 SketchUp 官方的讀檔元件</h3>
+        <p>隨 SketchUp 一起安裝，讀到的內容與畫面上看到的一致。</p>
+      </div>
+      <div class="card" style="padding:22px 26px">
+        <span class="mb-tag">兩件要先知道的事</span>
+        <ul class="bl" style="gap:12px">
+          <li>版本太新會讀不了，此時會明確告知</li>
+          <li>要開放給外部使用，需先確認授權</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="mb-label" style="margin-top:24px;margin-bottom:12px">上傳之後，網站做的四件事</p>
+    <div class="g4" style="gap:16px">
+      <div class="mb-step"><b>1　打開檔案</b><span>讀出模型內容</span></div>
+      <div class="mb-step"><b>2　走訪群組</b><span>含元件與圖層</span></div>
+      <div class="mb-step"><b>3　合併與量測</b><span>算出材質與尺寸</span></div>
+      <div class="mb-step"><b>4　產生預覽</b><span>存成網站的資料</span></div>
+    </div>
+
+    <p class="mb-close" style="margin-top:22px">只要上傳一次，之後再打開網站同一個模型會立刻顯示。</p>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>06 / 24</span></div>
+</section>
+
+<!-- ==================================================================
+     建材彙整網頁 Matboard · 王澄音 — slides 07–12
+     THINKLAB periwinkle system. All helper CSS below is prefixed
+     .mb2- and only ever selected inside these six sections.
+     ================================================================== -->
+<style>
+/* ---- scoped helpers: every selector is prefixed .mb2-, nothing leaks ---- */
+.mb2-stack{display:flex;flex-direction:column;height:100%}
+.mb2-fill{flex:1 1 auto;min-height:0}
+
+/* slide 07 — section-opener statement panels */
+.mb2-panel{background:var(--tint);border:1px solid var(--tint-b);border-radius:9px;
+           padding:46px 50px;display:flex;flex-direction:column;justify-content:center;
+           flex:1 1 auto}
+.mb2-panel .mb2-pt{font-size:40px;font-weight:700;color:var(--navy);line-height:1.3;
+                   letter-spacing:.01em}
+.mb2-panel .mb2-pd{font-size:25px;color:var(--body);line-height:1.72;margin-top:18px}
+
+/* slide 08 — label / description rows */
+.mb2-row{background:var(--tint);border:1px solid var(--tint-b);border-radius:8px;
+         padding:20px 26px;display:grid;grid-template-columns:150px 1fr;gap:22px;
+         align-items:center;flex:1 1 auto}
+.mb2-row .mb2-rl{font-size:24px;font-weight:700;color:var(--pw-d);line-height:1.3}
+.mb2-row .mb2-rd{font-size:21px;color:var(--body);line-height:1.66}
+
+/* slide 08 — diagram panel */
+.mb2-dia{background:#E9EDFA;border:1px solid var(--pw-l);border-radius:8px;
+         padding:22px 24px 20px;display:flex;flex-direction:column;align-items:center;
+         justify-content:center;gap:14px}
+.mb2-dia svg{display:block;width:100%;height:auto;max-height:296px}
+.mb2-dcap{text-align:center;line-height:1.55}
+.mb2-dcap .mb2-c1{font-size:20px;font-weight:700;color:var(--navy)}
+.mb2-dcap .mb2-c2{font-size:20px;color:var(--body);margin-top:5px}
+.mb2-dcap .mb2-c2 b{color:var(--pw-d);font-weight:700}
+
+/* slide 09 — stat tiles */
+.mb2-stat{background:var(--tint);border:1px solid var(--tint-b);border-radius:8px;
+          padding:34px 28px}
+.mb2-stat .mb2-sf{font-size:50px;font-weight:700;color:var(--pw-d);line-height:1.06;
+                  letter-spacing:-.005em;white-space:nowrap}
+.mb2-stat .mb2-sl{font-size:20px;color:var(--muted);line-height:1.45;margin-top:14px}
+
+/* slide 09 — case cards with trailing badge */
+.mb2-case{background:var(--tint);border:1px solid var(--tint-b);border-radius:8px;
+          padding:32px 30px;display:grid;grid-template-columns:1fr auto;gap:22px;
+          align-items:center}
+.mb2-case .mb2-ct{font-size:24px;font-weight:700;color:var(--navy);line-height:1.3}
+.mb2-case .mb2-cd{font-size:20px;color:var(--body);line-height:1.66;margin-top:14px}
+.mb2-badge{background:var(--pw);color:#fff;font-size:19px;font-weight:700;
+           border-radius:7px;padding:12px 20px;white-space:nowrap;letter-spacing:.03em}
+
+/* slide 10 — labelled blocks */
+.mb2-blk{background:var(--tint);border:1px solid var(--tint-b);border-radius:8px;
+         padding:20px 24px;display:flex;flex-direction:column;justify-content:center;
+         flex:1 1 auto}
+.mb2-blk .mb2-bk{font-size:19px;font-weight:700;color:var(--pw-d);letter-spacing:.1em}
+.mb2-blk .mb2-bt{font-size:26px;font-weight:700;color:var(--navy);line-height:1.28;
+                 margin-top:7px}
+.mb2-blk .mb2-bd{font-size:19px;color:var(--body);line-height:1.6;margin-top:9px}
+
+/* slide 11 — numbered 2x2 */
+.mb2-item{background:var(--tint);border:1px solid var(--tint-b);border-radius:8px;
+          padding:26px 28px;display:flex;flex-direction:column;justify-content:center}
+.mb2-item .mb2-ih{display:flex;align-items:center;gap:16px}
+.mb2-item .mb2-it{font-size:25px;font-weight:700;color:var(--navy);line-height:1.3}
+.mb2-item .mb2-id{font-size:21px;color:var(--body);line-height:1.72;margin-top:16px}
+
+/* slide 12 — definition rows */
+.mb2-defs{background:var(--tint);border:1px solid var(--tint-b);border-radius:8px;
+          padding:10px 26px;display:flex;flex-direction:column;justify-content:center}
+.mb2-def{display:grid;grid-template-columns:172px 1fr;gap:20px;align-items:center;
+         padding:16px 0;border-bottom:1px solid var(--tint-b)}
+.mb2-def:last-child{border-bottom:none}
+.mb2-def .mb2-dk{font-size:21px;font-weight:700;color:var(--pw-d);line-height:1.3}
+.mb2-def .mb2-dd{font-size:19px;color:var(--body);line-height:1.55}
+
+/* image frames — explicit px height on the frame, contain on the bitmap,
+   so a flex parent that loses definite height can never collapse them */
+.mb2-frame{background:#fff;border:1px solid var(--tint-b);border-radius:7px;
+           overflow:hidden;flex:none}
+.mb2-frame img{display:block;width:100%;height:100%;object-fit:contain}
+/* mb2-image3 is 540x348 native but laid out near 5 in wide — the inset rule
+   plus soft shadow frames it as a captured screen rather than a soft render */
+.mb2-frame.mb2-ui{padding:7px;background:#F7F8FC;border-color:var(--pw-l);
+                  box-shadow:inset 0 0 0 1px rgba(255,255,255,.9)}
+.mb2-frame.mb2-ui img{border-radius:3px;border:1px solid var(--tint-b);background:#fff}
+</style>
+
+<!-- =============================== 07 =============================== -->
+<section class="slide lg">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker">PROBLEMS</p>
+      <h1>遇到的核心問題</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <div class="mb2-stack" style="gap:32px">
+      <div class="mb2-panel">
+        <div class="mb2-pt">一、牆面尺寸偵測</div>
+        <div class="mb2-pd">轉了角度的樓板，套正方向的框就量錯。要沿著它自己的邊測量。</div>
+      </div>
+      <div class="mb2-panel">
+        <div class="mb2-pt">二、模型重疊面</div>
+        <div class="mb2-pd">量體貼在一起時，兩個面都存在卻都看不到。</div>
+      </div>
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>07 / 24</span></div>
+</section>
+
+<!-- =============================== 08 =============================== -->
+<section class="slide lg">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker">MEASURE</p>
+      <h1>尺寸量測規則</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:20px">沿著這個面真正的邊去量，不套一個正方向的外框。</p>
+
+    <div class="mb2-fill"
+         style="display:grid;grid-template-columns:1fr 620px;gap:26px;align-items:stretch">
+
+      <!-- left: three measurement rules -->
+      <div class="mb2-stack" style="gap:18px">
+        <div class="mb2-row">
+          <div class="mb2-rl">矩形</div>
+          <div class="mb2-rd">報兩個邊長；牆面依立面習慣排成寬 × 高。</div>
+        </div>
+        <div class="mb2-row">
+          <div class="mb2-rl">三角形</div>
+          <div class="mb2-rd">報三個邊長，外加最長邊與其對應高。</div>
+        </div>
+        <div class="mb2-row">
+          <div class="mb2-rl">其他形狀</div>
+          <div class="mb2-rd">逐段列出每一條邊長，並標明整體範圍。</div>
+        </div>
+      </div>
+
+      <!-- right: the argument of the slide, drawn -->
+      <div class="mb2-dia">
+        <svg viewBox="0 0 328 299" preserveAspectRatio="xMidYMid meet"
+             role="img" aria-label="6 × 4 m 的樓板轉 30 度，虛線為正方向外框">
+          <!-- axis-aligned bounding box: dashed, light, deliberately secondary -->
+          <rect x="20" y="20" width="287.9" height="258.6" rx="2"
+                fill="#F7F8FC" stroke="#9AA6D2" stroke-width="1.6"
+                stroke-dasharray="8 7"/>
+          <!-- the slab itself: 6 x 4 m, rotated 30 degrees, solid -->
+          <g transform="rotate(30 163.95 149.3)">
+            <rect x="43.95" y="69.3" width="240" height="160" rx="2"
+                  fill="#7684C0" stroke="#414E8C" stroke-width="2.2"/>
+            <text x="163.95" y="96" text-anchor="middle" fill="#FFFFFF"
+                  font-size="17" font-weight="700"
+                  font-family="'Microsoft JhengHei UI','Segoe UI',Arial,sans-serif">6.00</text>
+            <text x="272" y="155" text-anchor="end" fill="#FFFFFF"
+                  font-size="17" font-weight="700"
+                  font-family="'Microsoft JhengHei UI','Segoe UI',Arial,sans-serif">4.00</text>
+          </g>
+        </svg>
+        <div class="mb2-dcap">
+          <div class="mb2-c1">6 × 4 m 的樓板轉 30°</div>
+          <div class="mb2-c2"><b>報 6.00 × 4.00</b>，不是外框的 8.2 × 7.5</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fn" style="margin-top:20px">
+      <b>面積照實際幾何計算，開口已扣除</b>　—　帶窗、門的牆體會自動扣除開口面積。
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>08 / 24</span></div>
+</section>
+
+<!-- =============================== 09 =============================== -->
+<section class="slide lg">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker">OVERLAP</p>
+      <h1>重疊面偵測</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:26px">實心量體組成的模型，有大量彼此貼合、兩面都看不到的表面。</p>
+
+    <div class="g4" style="gap:22px;margin-bottom:30px">
+      <div class="mb2-stat">
+        <div class="mb2-sf">2,102.08</div>
+        <div class="mb2-sl">m² 被埋沒</div>
+      </div>
+      <div class="mb2-stat">
+        <div class="mb2-sf">36.8%</div>
+        <div class="mb2-sl">佔全部表面積</div>
+      </div>
+      <div class="mb2-stat">
+        <div class="mb2-sf">314</div>
+        <div class="mb2-sl">組重疊面</div>
+      </div>
+      <div class="mb2-stat">
+        <div class="mb2-sf">0.24 秒</div>
+        <div class="mb2-sl">計算時間</div>
+      </div>
+    </div>
+
+    <div class="g2" style="height:auto;gap:26px;margin-bottom:30px">
+      <div class="mb2-case">
+        <div>
+          <div class="mb2-ct">兩面貼在一起</div>
+          <div class="mb2-cd">兩個量體面對面接觸，兩個面都被埋住。</div>
+        </div>
+        <div class="mb2-badge">兩側都扣</div>
+      </div>
+      <div class="mb2-case">
+        <div>
+          <div class="mb2-ct">同一面畫了兩次</div>
+          <div class="mb2-cd">位置完全重合，但還有一份看得見。</div>
+        </div>
+        <div class="mb2-badge">只扣一次</div>
+      </div>
+    </div>
+
+    <div class="fn">
+      位置重合的面會兩兩比對，實際算出彼此蓋掉多少 —— 不是抓比例估算。彙整表可切換「全部面／扣除重疊」。
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>09 / 24</span></div>
+</section>
+
+<!-- =============================== 10 =============================== -->
+<section class="slide lg">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker">INTERFACE</p>
+      <h1>介面架構：三欄配置</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <div style="display:grid;grid-template-columns:900px 1fr;gap:28px;align-items:start">
+
+      <div class="mb2-frame" style="height:563px">
+        <img src="assets/mb2-image1.png" alt="建材彙整網頁的三欄介面：左欄檔案、中欄模型預覽、右欄資料">
+      </div>
+
+      <div class="mb2-stack" style="height:563px;gap:16px">
+        <div class="mb2-blk">
+          <div class="mb2-bk">左欄</div>
+          <div class="mb2-bt">資料進出</div>
+          <div class="mb2-bd">拖入模型、專案清單。</div>
+        </div>
+        <div class="mb2-blk">
+          <div class="mb2-bk">中欄</div>
+          <div class="mb2-bt">模型本身</div>
+          <div class="mb2-bd">由.skp讀取的預覽模型。</div>
+        </div>
+        <div class="mb2-blk">
+          <div class="mb2-bk">右欄</div>
+          <div class="mb2-bt">答案</div>
+          <div class="mb2-bd">選取面與建材彙整兩個分頁。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>10 / 24</span></div>
+</section>
+
+<!-- =============================== 11 =============================== -->
+<section class="slide lg">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker">PRINCIPLES</p>
+      <h1>介面設計原則</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:22px">以既有的 SketchUp 操作習慣為準。</p>
+
+    <div class="g2 mb2-fill"
+         style="height:auto;grid-auto-rows:1fr;gap:24px 26px">
+      <div class="mb2-item">
+        <div class="mb2-ih"><span class="num">1</span>
+          <span class="mb2-it">沿用 SketchUp 的手感</span></div>
+        <div class="mb2-id">中鍵旋轉、滾輪往游標縮放、Shift + Z 顯示全部……等慣用的更動視角方式。</div>
+      </div>
+      <div class="mb2-item">
+        <div class="mb2-ih"><span class="num">2</span>
+          <span class="mb2-it">所需資訊在右側</span></div>
+        <div class="mb2-id">點選一個面，資料及時出現在右欄。</div>
+      </div>
+      <div class="mb2-item">
+        <div class="mb2-ih"><span class="num">3</span>
+          <span class="mb2-it">一次只問一個問題</span></div>
+        <div class="mb2-id">右欄兩個分頁：點選面、整份模型統整資訊。<br>次要資訊預設收合。</div>
+      </div>
+      <div class="mb2-item">
+        <div class="mb2-ih"><span class="num">4</span>
+          <span class="mb2-it">數值計算說明</span></div>
+        <div class="mb2-id">每個數字都寫明計算基準與排除了哪些材質，報表也會呈現。</div>
+      </div>
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>11 / 24</span></div>
+</section>
+
+<!-- =============================== 12 =============================== -->
+<section class="slide lg">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker">SCREEN 01</p>
+      <h1>功能一 · 面資料查詢</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:18px">點選任一面，右欄顯示這一塊的完整資料。</p>
+
+    <div style="display:grid;grid-template-columns:590px 206px 1fr;gap:22px;
+                align-items:stretch">
+
+      <div class="mb2-frame mb2-ui" style="height:420px">
+        <img src="assets/mb2-image3.png" alt="模型畫面中選取到的外牆白色磁磚（藍色高亮）">
+      </div>
+
+      <div class="mb2-frame" style="height:420px">
+        <img src="assets/mb2-image2.png" alt="右欄「選取面」分頁顯示這一面的完整資料">
+      </div>
+
+      <div class="mb2-defs">
+        <div class="mb2-def">
+          <div class="mb2-dk">材質與分類</div>
+          <div class="mb2-dd">名稱、表面類型、圖層</div>
+        </div>
+        <div class="mb2-def">
+          <div class="mb2-dk">面積</div>
+          <div class="mb2-dd">實際幾何計算，開口已扣除</div>
+        </div>
+        <div class="mb2-def">
+          <div class="mb2-dk">寬 × 高</div>
+          <div class="mb2-dd">依朝向決定排法</div>
+        </div>
+        <div class="mb2-def">
+          <div class="mb2-dk">被覆蓋</div>
+          <div class="mb2-dd">被哪個量體埋住、各佔多少</div>
+        </div>
+        <div class="mb2-def">
+          <div class="mb2-dk">位置</div>
+          <div class="mb2-dd">元件、朝向方位、高程</div>
+        </div>
+        <div class="mb2-def">
+          <div class="mb2-dk">貼圖單元</div>
+          <div class="mb2-dd">材質貼圖的實際尺寸</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="fn" style="margin-top:18px">
+      模型自己記錄的屬性（材料規格、BIM 欄位共 15 項）也會帶出在收合欄位。
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>12 / 24</span></div>
+</section>
+
+<!-- ==================================================================
+     建材彙整網頁 Matboard · 王澄音 —— slides 13–18
+     THINKLAB periwinkle system. All custom rules are prefixed `.mb3`
+     (the class sits on every one of these six sections), so nothing
+     here can reach the rest of the deck.
+     ================================================================== -->
+
+<!-- ---------- 13 · SCREEN 02 建材彙整表 ---------- -->
+<section class="slide lg mb3">
+  <style>
+  /* scoped to .mb3 — cannot leak out of these six slides */
+  .mb3 .kickL{letter-spacing:.16em}
+  .mb3 .frame{background:#fff;border:1px solid var(--tint-b);border-radius:7px;
+              overflow:hidden;display:block;padding:6px}
+  .mb3 .frame img{width:100%;height:100%;object-fit:contain;display:block}
+  .mb3 .cap{font-size:19px;color:var(--muted);line-height:1.5;text-align:center;margin-top:12px}
+  .mb3 .cap.on{color:var(--pw-d);font-weight:700}
+
+  /* 13 */
+  .mb3 .s13{display:grid;grid-template-columns:1.26fr 1fr;gap:26px;align-items:start}
+  .mb3 .s13 .shots{display:flex;gap:18px;align-items:flex-start}
+  .mb3 .s13 .shots .tallpic{flex:0 0 196px}
+  .mb3 .s13 .shots .widepic{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+  .mb3 .s13 .notes{display:flex;flex-direction:column;gap:18px}
+  .mb3 .s13 .notes .card{flex:1 1 auto}
+
+  /* 14 — before / after pair: identical frames, captions on one baseline */
+  .mb3 .s14{display:grid;grid-template-columns:1fr 1fr;gap:40px;
+            max-width:1280px;margin:0 auto;width:100%}
+  .mb3 .s14 .col{display:flex;flex-direction:column}
+
+  /* 15 */
+  .mb3 .s15{display:grid;grid-template-columns:1.32fr 1fr;gap:26px;align-items:start}
+  .mb3 .s15 .notes{display:flex;flex-direction:column;gap:16px}
+  .mb3 .s15 .notes .card{flex:1 1 auto}
+
+  /* 16 */
+  .mb3 .s16{display:grid;grid-template-columns:1.28fr 1fr;gap:26px;align-items:start}
+  .mb3 .s16 .card{padding:22px 26px}
+  .mb3 .s16 .card h3{font-size:24px;margin-bottom:16px}
+  .mb3 .nlist{list-style:none;display:flex;flex-direction:column;gap:12px}
+  .mb3 .nlist li{display:grid;grid-template-columns:30px 1fr;gap:13px;align-items:start;
+                 font-size:19px;line-height:1.6;color:var(--body)}
+  .mb3 .nlist li i{font-style:normal;width:30px;height:30px;border-radius:50%;
+                   background:#E9EDFA;border:1px solid var(--pw-l);color:var(--pw-d);
+                   font-size:16px;font-weight:700;display:flex;align-items:center;
+                   justify-content:center;margin-top:2px}
+
+  /* 17 — three columns; the third one leads */
+  .mb3 .s17 .card{padding:24px 26px}
+  .mb3 .s17 .card h3{font-size:24px;margin-bottom:15px}
+  .mb3 .s17 .card.acc h3{color:#2F3C86}
+  .mb3 .s17 .bl{gap:12px}
+  .mb3 .s17 .lead-col{box-shadow:0 3px 16px rgba(65,78,140,.15)}
+  .mb3 .s17 .fbar{background:var(--tint);border:1px solid var(--pw-l);border-radius:7px;
+                  padding:20px 26px;font-size:24px;font-weight:700;color:var(--navy);
+                  line-height:1.5;margin-top:26px}
+
+  /* 18 — four steps with connectors */
+  .mb3 .s18{display:flex;align-items:stretch;width:100%}
+  .mb3 .s18 .scard{flex:1 1 auto;min-width:0;min-height:330px;background:var(--tint);
+                   border:1px solid var(--tint-b);border-radius:7px;padding:28px 26px;
+                   display:flex;flex-direction:column;justify-content:center}
+  .mb3 .s18 .scard h4{font-size:24px;font-weight:700;color:var(--navy);line-height:1.32;
+                      margin:20px 0 12px}
+  .mb3 .s18 .scard p{font-size:20px;color:var(--body);line-height:1.65}
+  .mb3 .s18 .arr{flex:0 0 46px;display:flex;align-items:center;justify-content:center;
+                 color:var(--pw-l);font-size:28px;line-height:1;user-select:none}
+  </style>
+
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker kickL">SCREEN 02</p>
+      <h1>功能二 · 建材彙整表</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:20px">依材質累計，並且可以把不是建材的項目排除掉。</p>
+    <div class="s13">
+      <div class="shots">
+        <div class="frame tallpic" style="height:440px">
+          <img src="assets/mb2-image4.png" alt="建材彙整表面板">
+        </div>
+        <div class="widepic">
+          <div class="frame" style="height:440px">
+            <img src="assets/mb2-image5.png" alt="點選材質後其餘淡出的模型預覽">
+          </div>
+          <p class="cap">點材質名稱：只顯示該材質，其餘淡出</p>
+        </div>
+      </div>
+      <div class="notes">
+        <div class="card">
+          <h3>取消勾選排除非建材之面積</h3>
+          <p>草地、玻璃等非建材，取消後及時重算合計面積。</p>
+        </div>
+        <div class="card acc">
+          <h3>全部面／扣除重疊</h3>
+          <p>同一份模型兩種基準：5,705.91 (全部面積)與 3,603.83 m²(扣除重疊面積)。選哪一個由使用者決定，彙整表上也會寫明。</p>
+        </div>
+        <div class="card">
+          <h3>選擇會被記住</h3>
+          <p>排除設定跟著專案保存，重新打開仍在。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>13 / 24</span></div>
+</section>
+
+<!-- ---------- 14 · SCREEN 03 水平剖面 ---------- -->
+<section class="slide lg mb3">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker kickL">SCREEN 03</p>
+      <h1>功能三 · 水平剖面</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <div class="s14">
+      <div class="col">
+        <div class="frame" style="height:510px">
+          <img src="assets/mb2-image6.png" alt="剖面關閉的模型">
+        </div>
+        <p class="cap">剖面關閉 —— 只點得到最外層的屋頂</p>
+      </div>
+      <div class="col">
+        <div class="frame" style="height:510px;border-color:var(--pw-l)">
+          <img src="assets/mb2-image7.png" alt="剖面開啟後可見室內樓板的模型">
+        </div>
+        <p class="cap on">剖面開啟 —— 室內橡木地板 93.84 m² 可以點選</p>
+      </div>
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>14 / 24</span></div>
+</section>
+
+<!-- ---------- 15 · OUTPUT 匯出格式 ---------- -->
+<section class="slide lg mb3">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker kickL">OUTPUT</p>
+      <h1>匯出格式</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:20px">三種匯出都會套用當下的排除設定與計算基準。</p>
+    <div class="s15">
+      <div class="frame" style="height:500px">
+        <img src="assets/mb2-image8.png" alt="建材彙整表 PDF 報表">
+      </div>
+      <div class="notes">
+        <div class="card">
+          <h3>PDF（A4 橫式）</h3>
+          <p>材質成欄、屬性成列，類似門窗表的編排方式。</p>
+        </div>
+        <div class="card">
+          <h3>彙整表（Excel 可開）</h3>
+          <p>各材質總面積、類別與是否計入。</p>
+        </div>
+        <div class="card">
+          <h3>明細表（Excel 可開）</h3>
+          <p>每個面的邊長、面積與位置。</p>
+        </div>
+        <div class="fn">報表由網站產生，中文字型取自系統，任何電腦打開都不缺字。</div>
+      </div>
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>15 / 24</span></div>
+</section>
+
+<!-- ---------- 16 · ONBOARDING 內建操作說明 ---------- -->
+<section class="slide lg mb3">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker kickL">ONBOARDING</p>
+      <h1>內建操作說明</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <div class="s16">
+      <div class="frame" style="height:440px">
+        <img src="assets/mb2-image9.png" alt="內建八頁圖解導覽">
+      </div>
+      <div class="card acc">
+        <h3>八頁圖解</h3>
+        <ul class="nlist">
+          <li><i>1</i><span>這個網站在做什麼</span></li>
+          <li><i>2</i><span>上傳模型</span></li>
+          <li><i>3</i><span>轉動視角</span></li>
+          <li><i>4</i><span>點選查詢</span></li>
+          <li><i>5</i><span>尺寸是怎麼量的</span></li>
+          <li><i>6</i><span>用剖面取出室內表面</span></li>
+          <li><i>7</i><span>建材彙整與排除</span></li>
+          <li><i>8</i><span>匯出</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>16 / 24</span></div>
+</section>
+
+<!-- ---------- 17 · STATUS 現況與限制 ---------- -->
+<section class="slide lg mb3">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker kickL">STATUS</p>
+      <h1>現況與限制</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <div class="s17">
+      <div class="g3">
+        <div class="card">
+          <h3>現況</h3>
+          <ul class="bl">
+            <li>890 區塊、13 種材質可完整讀取</li>
+            <li>重疊面計算約 0.24 秒完成</li>
+            <li>數值讀取規則有自動檢查把關</li>
+            <li>開機後自動啟動，開瀏覽器就能用</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>限制</h3>
+          <ul class="bl">
+            <li>網站功能僅只得出面積</li>
+            <li>要比較兩家建材廠商的報價仍得另外找資料</li>
+            <li>停在這裡與直接開 SketchUp 一樣</li>
+          </ul>
+        </div>
+        <div class="card acc lead-col">
+          <h3>接下來的實作</h3>
+          <ul class="bl">
+            <li>材質底下新增廠商：報價・照片・規格</li>
+            <li>選定廠商，該面立即算出金額</li>
+            <li>彙整表加單價與金額，合計改預算總計</li>
+            <li>匯出報表與表格同步帶出金額</li>
+          </ul>
+        </div>
+      </div>
+      <div class="fbar">能選廠商、能算金額，讓面積彙整表進化成估價表。</div>
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>17 / 24</span></div>
+</section>
+
+<!-- ---------- 18 · WORKSHOP 實作步驟 ---------- -->
+<section class="slide lg mb3">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker kickL">WORKSHOP</p>
+      <h1>實作步驟</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <div class="s18">
+      <div class="scard">
+        <div class="num">1</div>
+        <h4>選取面材質加入廠商</h4>
+        <p>「廠商選項」區塊，按「＋」直接在網站上新增</p>
+      </div>
+      <div class="arr">→</div>
+      <div class="scard">
+        <div class="num">2</div>
+        <h4>選定就算金額</h4>
+        <p>點一下選定廠商，面積下方立刻顯示金額</p>
+      </div>
+      <div class="arr">→</div>
+      <div class="scard">
+        <div class="num">3</div>
+        <h4>彙整表 「總預算」</h4>
+        <p>總面積欄位，改成預算總計</p>
+      </div>
+      <div class="arr">→</div>
+      <div class="scard">
+        <div class="num">4</div>
+        <h4>匯出內容同步更動</h4>
+        <p>報表與 Excel 表格都帶出單價與金額</p>
+      </div>
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>18 / 24</span></div>
+</section>
+
+<!-- ==================================================================
+     Matboard 建材彙整網頁 · 王澄音 —— slides 19–24 (workshop closing run)
+     THINKLAB periwinkle system. All extra CSS is scoped under .mb4.
+     ================================================================== -->
+<style>
+/* ---- scoped to this run only: every rule is prefixed .mb4 ---- */
+/* must out-specify `.lg .card h3` from the deck stylesheet */
+.mb4 .card h3.tt3{font-size:24px;font-weight:700;color:var(--navy);line-height:1.35;
+                  letter-spacing:.01em}
+
+/* 19 — before / after pair -------------------------------------- */
+.mb4 .ba{background:#fff;border:1px solid var(--tint-b);border-radius:7px;padding:11px 15px}
+.mb4 .ba.on{background:#E9EDFA;border-color:var(--pw)}
+.mb4 .ba .pre{font-size:19px;color:var(--muted);letter-spacing:.02em}
+.mb4 .ba.on .pre{color:var(--pw-d)}
+.mb4 .ba .val{font-size:22px;color:var(--ink);line-height:1.45}
+.mb4 .ba.on .val{font-weight:700;color:var(--navy)}
+.mb4 .down{text-align:center;font-size:26px;font-weight:700;line-height:1;color:var(--pw);
+           margin:11px 0 11px}
+
+/* 20 — mock vendor panel ---------------------------------------- */
+.mb4 .vpanel{background:#F7F8FC;border:1px solid var(--tint-b);border-radius:10px;padding:18px}
+.mb4 .vhead{display:grid;grid-template-columns:58px 1fr;gap:15px;align-items:center}
+.mb4 .swatch{width:58px;height:58px;border-radius:7px;border:1px solid var(--tint-b);
+             background:linear-gradient(135deg,#FFFFFF 0%,#E9ECF6 100%)}
+.mb4 .vhead .n{font-size:24px;font-weight:700;color:var(--ink);line-height:1.3}
+.mb4 .vhead .s{font-size:18px;color:var(--muted);margin-top:3px}
+.mb4 .vbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:14px 0 12px}
+.mb4 .vbar .lbl{font-size:20px;font-weight:700;color:var(--pw-d);letter-spacing:.02em}
+.mb4 .addbtn{background:var(--pw);color:#fff;font-size:19px;font-weight:700;letter-spacing:.02em;
+             border-radius:7px;padding:8px 18px;white-space:nowrap}
+.mb4 .vrow{display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:center;
+           background:#fff;border:1px solid var(--tint-b);border-radius:8px;padding:10px 14px}
+.mb4 .vrow+.vrow{margin-top:10px}
+.mb4 .vrow.on{background:#E9EDFA;border-color:var(--pw);box-shadow:0 0 0 1px var(--pw) inset}
+.mb4 .vth{height:52px;border-radius:5px;border:1px solid var(--tint-b);
+          background:linear-gradient(135deg,#FFFFFF 0%,#E9ECF6 100%)}
+.mb4 .vn{font-size:20px;font-weight:700;color:var(--ink);line-height:1.3}
+.mb4 .vm{font-size:17px;color:var(--muted);margin-top:3px}
+.mb4 .vp{text-align:right;white-space:nowrap}
+.mb4 .vp .c,.mb4 .vp .u{font-size:17px;color:var(--muted)}
+.mb4 .vp .a{font-size:25px;font-weight:700;color:var(--pw-d)}
+.mb4 .vcap{font-size:19px;color:var(--muted);line-height:1.55;text-align:center;margin-top:13px}
+
+/* 21 / 23 — prompt cards ---------------------------------------- */
+.mb4 .pcardx{background:var(--tint);border:1px solid var(--tint-b);border-radius:9px;
+             padding:20px 22px 22px;display:flex;flex-direction:column;min-height:0}
+.mb4 .phd{display:flex;align-items:center;gap:16px;margin-bottom:15px;flex:none}
+.mb4 .phd h3{font-size:24px;font-weight:700;color:var(--navy);line-height:1.3}
+.mb4 .pbox{background:#fff;border:2px dashed var(--pw-l);border-radius:9px;
+           padding:17px 20px;flex:1 1 auto;min-height:0}
+.mb4 .pbox span{display:block;font-size:20px;line-height:1.8;color:var(--ink);
+                letter-spacing:.005em;
+                font-family:"Cascadia Mono","Consolas","Menlo",
+                            "Microsoft JhengHei UI","Microsoft JhengHei",
+                            "PingFang TC","Noto Sans TC",monospace}
+/* 23 — 會後進階 bar */
+.mb4 .advbar{display:grid;grid-template-columns:auto auto 1fr;gap:20px;align-items:center;
+             background:var(--tint);border:1px solid var(--tint-b);border-radius:9px;padding:16px 20px}
+.mb4 .gut{font-size:19px;font-weight:700;color:var(--pw-d);letter-spacing:.04em;
+          border:1px solid var(--pw-l);border-radius:6px;padding:6px 14px;white-space:nowrap}
+.mb4 .advt{font-size:23px;font-weight:700;color:var(--navy);white-space:nowrap}
+
+/* 22 — budget table --------------------------------------------- */
+.mb4 .btbl th{background:var(--pw-d);color:#fff;border-bottom:none;letter-spacing:.02em}
+.mb4 .btbl td{border-bottom:1px solid #E6EAF6}
+.mb4 .btbl th.n,.mb4 .btbl td.n{text-align:right;font-variant-numeric:tabular-nums}
+.mb4 .btbl td.k{color:var(--ink);font-weight:400}
+.mb4 .btbl tr.total td{background:#E9EDFA;color:var(--navy);font-weight:700;
+                       border-top:2px solid var(--pw-l);border-bottom:none}
+.mb4 .btbl tr.total td.amt{color:var(--pw-d);font-size:23px}
+.mb4 .tnote{font-size:19px;color:var(--muted);line-height:1.55;font-style:italic;margin-top:13px}
+
+/* 24 — closing panel -------------------------------------------- */
+.mb4 .closing{background:#E9EDFA;border:1.5px solid var(--pw-l);border-radius:11px;padding:22px 26px}
+.mb4 .closing h3{font-size:25px;font-weight:700;color:var(--pw-d);letter-spacing:.02em;
+                 margin-bottom:15px}
+.mb4 .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px 28px}
+.mb4 .qgrid p{font-size:21px;line-height:1.5;color:var(--navy);background:#fff;
+              border:1px solid var(--tint-b);border-radius:7px;padding:11px 17px}
+</style>
+
+<!-- ============================== 19 · NEXT ============================== -->
+<section class="slide lg mb4">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker">NEXT · 實作單元</p>
+      <h1>建材選擇與預算</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:20px">把「尺寸整理」延伸為「評估預算」。</p>
+    <div class="g3 hug" style="height:auto;gap:26px">
+
+      <div class="card" style="padding:22px 22px 24px">
+        <div class="num">1</div>
+        <h3 class="tt3" style="margin:18px 0 16px">材質　→　廠商選項</h3>
+        <div class="ba"><span class="pre">現況</span>　<span class="val">材質「白色磁磚」</span></div>
+        <div class="down">↓</div>
+        <div class="ba on"><span class="pre">加入後</span>　<span class="val">報價・照片・規格</span></div>
+      </div>
+
+      <div class="card" style="padding:22px 22px 24px">
+        <div class="num">2</div>
+        <h3 class="tt3" style="margin:18px 0 16px">總面積　→　預算總計</h3>
+        <div class="ba"><span class="pre">現況</span>　<span class="val">總面積 5,705.91 m²</span></div>
+        <div class="down">↓</div>
+        <div class="ba on"><span class="pre">加入後</span>　<span class="val">預算總計 NT$ ———</span></div>
+      </div>
+
+      <div class="card" style="padding:22px 22px 24px">
+        <div class="num">3</div>
+        <h3 class="tt3" style="margin:18px 0 16px">彙整表　→　估價表</h3>
+        <div class="ba"><span class="pre">現況</span>　<span class="val">材質・面積・區塊數</span></div>
+        <div class="down">↓</div>
+        <div class="ba on"><span class="pre">加入後</span>　<span class="val">再加上單價與金額</span></div>
+      </div>
+
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>19 / 24</span></div>
+</section>
+
+<!-- ============================== 20 · BUILD 01 ============================== -->
+<section class="slide lg mb4">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker">BUILD 01</p>
+      <h1>選取面 · 廠商選項</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:20px">點一個面，除了材質與尺寸，再列出這個材質可以用哪幾家。</p>
+    <div style="display:grid;grid-template-columns:48% 1fr;gap:30px;align-items:start">
+
+      <!-- LEFT: mock vendor panel (drawn in CSS, not a screenshot) -->
+      <div>
+        <div class="vpanel">
+          <div class="vhead">
+            <div class="swatch"></div>
+            <div>
+              <div class="n">白色磁磚</div>
+              <div class="s">牆面 · 10.26 m²</div>
+            </div>
+          </div>
+
+          <div class="vbar">
+            <span class="lbl">廠商選項　3</span>
+            <span class="addbtn">＋ 新增廠商</span>
+          </div>
+
+          <div class="vrow on">
+            <div class="vth"></div>
+            <div><div class="vn">冠軍建材</div><div class="vm">HT-6060 白</div></div>
+            <div class="vp"><span class="c">NT$ </span><span class="a">1,200</span><span class="u"> /m²</span></div>
+          </div>
+          <div class="vrow">
+            <div class="vth"></div>
+            <div><div class="vn">馬可貝里</div><div class="vm">MB-600W</div></div>
+            <div class="vp"><span class="c">NT$ </span><span class="a">1,080</span><span class="u"> /m²</span></div>
+          </div>
+          <div class="vrow">
+            <div class="vth"></div>
+            <div><div class="vn">白馬磁磚</div><div class="vm">WM-60 亮面</div></div>
+            <div class="vp"><span class="c">NT$ </span><span class="a">1,460</span><span class="u"> /m²</span></div>
+          </div>
+        </div>
+        <p class="vcap">已選定的方案供這個面計價，其餘保留隨時可換。</p>
+      </div>
+
+      <!-- RIGHT: two explanation blocks -->
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div class="card" style="padding:20px 24px 22px">
+          <h3 style="font-size:23px;color:var(--navy);margin-bottom:12px">按「＋」直接在網站上新增</h3>
+          <ul class="bl">
+            <li>廠商名稱、品名與型號</li>
+            <li>單價與計價單位（平方公尺／才／式）</li>
+            <li>實物照片（可先留空，之後再補）</li>
+          </ul>
+        </div>
+        <div class="card" style="padding:20px 24px 22px">
+          <h3 style="font-size:23px;color:var(--navy);margin-bottom:12px">選定之後</h3>
+          <ul class="bl">
+            <li>點一下就選定，該面立即以此單價計價</li>
+            <li>同一種材質可一次套用到全部區塊</li>
+            <li>廠商資料跟著專案保存，重開仍在</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>20 / 24</span></div>
+</section>
+
+<!-- ============================== 21 · PROMPTS 01 ============================== -->
+<section class="slide lg mb4">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker">PROMPTS 01</p>
+      <h1>階段一：提示詞範例</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <div class="g2 hug" style="height:auto;gap:30px">
+
+      <div class="pcardx">
+        <div class="phd"><div class="num">1</div><h3>廠商選項與「＋」按鈕</h3></div>
+        <div class="pbox">
+          <span>請在右側「選取面」的材質資訊下方，加一個</span>
+          <span>「廠商選項」區塊，列出這個材質已報價的廠商：</span>
+          <span>左邊照片、中間廠商與品名型號、右邊單價。</span>
+          <span>區塊右上角放一個「＋ 新增廠商」按鈕，</span>
+          <span>按下去出現表單：廠商名稱、品名型號、單價、</span>
+          <span>計價單位、照片（可留空）、交期，</span>
+          <span>儲存後立刻出現在清單裡。</span>
+          <span>資料以專案為單位存在瀏覽器，重新整理後還在。</span>
+          <span>原本的面積與尺寸計算完全不要動。</span>
+        </div>
+      </div>
+
+      <div class="pcardx">
+        <div class="phd"><div class="num">2</div><h3>選定廠商就算出金額</h3></div>
+        <div class="pbox">
+          <span>「廠商選項」裡的每一張都可以點選，</span>
+          <span>點一下就是這個面採用的廠商，</span>
+          <span>選定的那一張加上外框。</span>
+          <span>選定之後，在面積下方加一列「金額」，</span>
+          <span>金額 = 面積 × 該廠商的單價，</span>
+          <span>顯示成 NT$ 加千分位。</span>
+          <span>還沒選定時顯示「尚未選定廠商」。</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>21 / 24</span></div>
+</section>
+
+<!-- ============================== 22 · BUILD 02 ============================== -->
+<section class="slide lg mb4">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker">BUILD 02</p>
+      <h1>建材彙整表 · 金額欄位</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:18px">面積欄旁邊加上單價與金額，合計由總面積改為預算總計。</p>
+    <div style="display:grid;grid-template-columns:1.62fr 1fr;gap:30px;align-items:start">
+
+      <!-- LEFT: the schedule table -->
+      <div>
+        <table class="tbl btbl" style="border:1px solid var(--tint-b);border-radius:7px;overflow:hidden">
+          <thead>
+            <tr>
+              <th>　材質</th>
+              <th class="n">面積 m²</th>
+              <th class="n">單價 元/m²</th>
+              <th class="n">金額 NT$</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="k">　白色磁磚</td><td class="n">753.06</td><td class="n">1,200</td><td class="n">903,672</td></tr>
+            <tr><td class="k">　清水混凝土</td><td class="n">999.52</td><td class="n">850</td><td class="n">849,592</td></tr>
+            <tr><td class="k">　橡木地板</td><td class="n">373.53</td><td class="n">3,200</td><td class="n">1,195,296</td></tr>
+            <tr><td class="k">　金屬屋面</td><td class="n">295.22</td><td class="n">2,600</td><td class="n">767,572</td></tr>
+            <tr class="total"><td>　預算總計</td><td class="n">2,421.33</td><td class="n"></td><td class="n amt">3,716,132</td></tr>
+          </tbody>
+        </table>
+        <p class="tnote">欄位與數字為示意 —— 面積取自參考模型，單價僅供版面說明。</p>
+        <div class="fn" style="margin-top:14px">標頭改為「預算總計」；切到扣除重疊時，面積與金額一起重算。</div>
+      </div>
+
+      <!-- RIGHT: three rules -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card" style="padding:16px 20px 18px">
+          <h3 style="font-size:22px;color:var(--navy);margin-bottom:9px">排除項目不列金額</h3>
+          <p>草地、室內陰影這類非建材，面積與金額都不計入。</p>
+        </div>
+        <div class="card" style="padding:16px 20px 18px">
+          <h3 style="font-size:22px;color:var(--navy);margin-bottom:9px">兩種基準都要有金額</h3>
+          <p>全部面與扣除重疊各對應一個預算數字。</p>
+        </div>
+        <div class="card" style="padding:16px 20px 18px">
+          <h3 style="font-size:22px;color:var(--navy);margin-bottom:9px">匯出同步</h3>
+          <p>報表與 Excel 表格都加上單價、金額欄。</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>22 / 24</span></div>
+</section>
+
+<!-- ============================== 23 · PROMPTS 02 ============================== -->
+<section class="slide lg mb4">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker">PROMPTS 02</p>
+      <h1>階段二：提示詞範例</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <p class="lead" style="margin-bottom:16px">彙整表怎麼加欄、匯出怎麼跟著改；最後一段是會後的進階題。</p>
+
+    <div class="g2 hug" style="height:auto;gap:30px;margin-bottom:16px">
+      <div class="pcardx" style="padding:18px 20px 20px">
+        <div class="phd" style="margin-bottom:13px"><div class="num">3</div><h3>彙整表加單價與金額</h3></div>
+        <div class="pbox" style="padding:15px 19px">
+          <span>建材彙整表在面積右邊加「單價」與「金額」兩欄。</span>
+          <span>單價取自該材質選定的廠商，沒有選定就留空。</span>
+          <span>最後一列的合計改成「預算總計」，</span>
+          <span>畫面最上方的「總面積」也一起改。</span>
+          <span>切換「全部面／扣除重疊」時金額要重算，</span>
+          <span>被取消勾選的材質不計入。</span>
+        </div>
+      </div>
+
+      <div class="pcardx" style="padding:18px 20px 20px">
+        <div class="phd" style="margin-bottom:13px"><div class="num">4</div><h3>匯出跟著改</h3></div>
+        <div class="pbox" style="padding:15px 19px">
+          <span>PDF 報表與兩個 CSV 都加上單價與金額欄。</span>
+          <span>PDF 抬頭再加一行：報價版本與日期。</span>
+          <span>原本抬頭上的計算基準與排除清單要保留。</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="advbar">
+      <span class="gut">會後進階</span>
+      <span class="advt">接既有的報價表</span>
+      <div class="pbox" style="padding:13px 18px;flex:none">
+        <span>請加一個「匯入廠商清單」按鈕，可以上傳 Excel 或 CSV 一次建立多家廠商，</span>
+        <span>模型材質與廠商怎麼對應由我在畫面上選。</span>
+      </div>
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>23 / 24</span></div>
+</section>
+
+<!-- ============================== 24 · TIPS ============================== -->
+<section class="slide lg mb4">
+  <div class="band"></div>
+  <div class="hd">
+    <div><p class="kicker">TIPS</p>
+      <h1>提示詞怎麼寫，卡住怎麼辦</h1></div>
+    <div class="brand">THINKLAB<br>2026</div>
+  </div>
+  <div class="body vc">
+    <div class="g4" style="gap:20px;margin-bottom:26px">
+      <div class="card" style="padding:20px 20px 22px">
+        <div class="num">1</div>
+        <h3 style="font-size:23px;color:var(--navy);margin:16px 0 10px">說清楚放在哪裡</h3>
+        <p>位置、名稱、順序都清楚列出來，提示詞愈具體成果愈接近想像。</p>
+      </div>
+      <div class="card" style="padding:20px 20px 22px">
+        <div class="num">2</div>
+        <h3 style="font-size:23px;color:var(--navy);margin:16px 0 10px">一次只做一件事</h3>
+        <p>貼一段、看畫面、對了再貼下一段。一次講五件事，錯了會不知道是哪一件。</p>
+      </div>
+      <div class="card" style="padding:20px 20px 22px">
+        <div class="num">3</div>
+        <h3 style="font-size:23px;color:var(--navy);margin:16px 0 10px">講明不准動什麼</h3>
+        <p>若擔心AI亂改既有的東西，可以在提示詞最後補一句「其餘不做任何更改」。</p>
+      </div>
+      <div class="card" style="padding:20px 20px 22px">
+        <div class="num">4</div>
+        <h3 style="font-size:23px;color:var(--navy);margin:16px 0 10px">錯了就把畫面貼回去</h3>
+        <p>把錯誤訊息或截圖直接貼進 Claude Code。</p>
+      </div>
+    </div>
+
+    <div class="closing">
+      <h3>卡住的時候，照抄這四句</h3>
+      <div class="qgrid">
+        <p>「剛才的改動讓 ___ 壞掉了，請改回原本的行為。」</p>
+        <p>「畫面沒有變化，請幫我確認要不要重新啟動網站。」</p>
+        <p>「請用三行說明這次改了哪些地方。」</p>
+        <p>「先不要再改，我要看目前的結果。」</p>
+      </div>
+    </div>
+  </div>
+  <div class="ft"><span>建材彙整網頁 Matboard · 王澄音</span><span>24 / 24</span></div>
+</section>
+
+
+
+</div></div>
+
+<div id="hint">← → 換頁 ｜ O 總覽 ｜ F 全螢幕</div>
+<div id="ov"><div id="ovg"></div></div>
+
+<script>
+(function(){
+  var stage    = document.getElementById('stage'),
+      slides   = Array.prototype.slice.call(stage.querySelectorAll('.slide')),
+      bar      = document.getElementById('bar'),
+      ov       = document.getElementById('ov'),
+      ovg      = document.getElementById('ovg'),
+      i        = 0,
+      QA       = /(\?|&)qa\b/.test(location.search),
+      PRINT    = /(\?|&)print\b/.test(location.search);
+
+  /* ---- the 27 tools of THINKLAB XOS (slides 01 / 05 / 14) ---- */
+  var TOOLS = [
+    {n:'01',t:'DrawReview',c:'col',d:'圖面標註審閱'},{n:'02',t:'Gitea',c:'col',d:'內部版本控管'},
+    {n:'03',t:'Speckle',c:'col',d:'BIM 模型串流'},{n:'04',t:'PDF→DXF',c:'cad',d:'圖面向量化'},
+    {n:'05',t:'AI Batch',c:'ai',d:'AI 批次算圖'},{n:'06',t:'地籍→DXF',c:'cad',d:'坐標展圖'},
+    {n:'07',t:'KHH UBA',c:'chk',d:'高雄分區查詢'},{n:'08',t:'3D Tiles',c:'cad',d:'3D 圖磚下載'},
+    {n:'09',t:'綠建築',c:'chk',d:'EEWH 五大指標'},{n:'10',t:'DOB Pusher',c:'ai',d:'自動送件'},
+    {n:'11',t:'DOB PDF',c:'cad',d:'浮水印修正'},{n:'12',t:'LandIQ',c:'chk',m:1,d:'地號全項查詢'},
+    {n:'13',t:'DPM',c:'col',m:1,d:'請款・工時'},{n:'14',t:'石材拼貼',c:'cad',d:'書本對花模擬'},
+    {n:'15',t:'DYA 坪效',c:'ai',m:1,d:'坪效・成本・毛利'},{n:'16',t:'VR TOUR',c:'col',m:1,d:'360 全景導覽'},
+    {n:'17',t:'街景→HDRI',c:'cad',d:'環境貼圖產生'},{n:'18',t:'法規知識庫',c:'chk',m:1,d:'293 篇法規函釋'},
+    {n:'19',t:'建照繪製',c:'cad',d:'送審流程管理'},{n:'20',t:'建照面積',c:'ai',d:'樓地板自動計算'},
+    {n:'21',t:'REM',c:'chk',m:1,d:'實價・市場分析'},{n:'22',t:'Activity',c:'col',d:'電腦活動監測'},
+    {n:'23',t:'STANDARDS',c:'cad',m:1,d:'BIM 標準治理'},{n:'24',t:'FAMILY',c:'cad',m:1,d:'Revit 族群庫'},
+    {n:'25',t:'siteVR',c:'col',d:'基地 360 紀錄'},{n:'26',t:'XHOUSING',c:'chk',d:'住宅戶型庫'},
+    {n:'27',t:'TWM',c:'chk',d:'選址機會地圖'}
+  ];
+  function buildGrid(el, mini){
+    if(!el) return;
+    TOOLS.forEach(function(o){
+      var d = document.createElement('div');
+      d.className = 'mcell t-' + o.c;
+      d.innerHTML = mini
+        ? '<div class="mn">' + o.n + '</div>' + (o.m ? '<div class="mcp">◈</div>' : '')
+        : '<div class="mn">' + o.n + (o.m ? ' <span class="mcp">◈ MCP</span>' : '') + '</div>' +
+          '<div><div class="mt">' + o.t + '</div><div class="md">' + o.d + '</div></div>';
+      el.appendChild(d);
+    });
+  }
+  buildGrid(document.getElementById('hubgrid'), false);
+  buildGrid(document.getElementById('titlegrid'), true);
+  buildGrid(document.getElementById('endgrid'), true);
+
+  /* ---- the header band's slow hue drift: four crossfading layers ---- */
+  stage.querySelectorAll('.band').forEach(function(b){
+    b.innerHTML = '<i></i><i></i><i></i><i></i>';
+  });
+
+  /* QA mode: strip video sources so headless capture settles.
+     PRINT mode (used for the PPTX export screenshots): freeze the gradient
+     drift like QA does, but leave video alone so its first frame renders. */
+  if(QA){ document.documentElement.classList.add('noanim');
+          stage.querySelectorAll('video').forEach(function(v){ v.removeAttribute('src'); v.load(); }); }
+  if(PRINT){ document.documentElement.classList.add('noanim'); }
+
+  /* ---- fit the 1600x900 stage into the viewport ---- */
+  function fit(){
+    var s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit); fit();
+
+  /* ---- slide switching; videos only run on the visible slide ---- */
+  function show(n){
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function(s, k){
+      var on = k === i;
+      s.classList.toggle('on', on);
+      if(!QA) s.querySelectorAll('video').forEach(function(v){
+        if(on){ v.currentTime = 0; v.play().catch(function(){}); } else { v.pause(); }
+      });
+    });
+    bar.style.width = ((i + 1) / slides.length * 100) + '%';
+    if(location.hash !== '#' + i) history.replaceState(null, '', '#' + i);
+  }
+  function next(){ show(i + 1); }
+  function prev(){ show(i - 1); }
+
+  /* ---- overview grid (live clones, scaled down) ---- */
+  var ovBuilt = false;
+  function buildOv(){
+    if(ovBuilt) return; ovBuilt = true;
+    slides.forEach(function(s, k){
+      var cell = document.createElement('div'); cell.className = 'ovi';
+      var mini = s.cloneNode(true);
+      mini.className = 'slide on mini';
+      mini.style.cssText = 'position:absolute;left:0;top:0;width:1600px;height:900px;' +
+                           'opacity:1;visibility:visible;transform-origin:top left';
+      mini.querySelectorAll('video').forEach(function(v){ v.removeAttribute('src'); });
+      cell.appendChild(mini);
+      var tag = document.createElement('b'); tag.textContent = k; cell.appendChild(tag);
+      cell.onclick = function(){ toggleOv(false); show(k); };
+      ovg.appendChild(cell);
+      requestAnimationFrame(function(){
+        mini.style.transform = 'scale(' + (cell.clientWidth / 1600) + ')';
+      });
+    });
+    window.addEventListener('resize', function(){
+      ovg.querySelectorAll('.ovi').forEach(function(c){
+        c.firstChild.style.transform = 'scale(' + (c.clientWidth / 1600) + ')';
+      });
+    });
+  }
+  function toggleOv(on){
+    if(on === undefined) on = !ov.classList.contains('on');
+    if(on) buildOv();
+    ov.classList.toggle('on', on);
+  }
+
+  /* ---- input ---- */
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' '){ next(); e.preventDefault(); }
+    else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ prev(); e.preventDefault(); }
+    else if(e.key === 'Home'){ show(0); }
+    else if(e.key === 'End'){ show(slides.length - 1); }
+    else if(e.key === 'o' || e.key === 'O'){ toggleOv(); }
+    else if(e.key === 'Escape'){ toggleOv(false); }
+    else if(e.key === 'f' || e.key === 'F'){
+      if(document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen();
+    }
+  });
+  document.getElementById('viewport').addEventListener('click', function(e){
+    if(e.target.tagName === 'VIDEO') return;
+    (e.clientX < window.innerWidth * 0.28 ? prev : next)();
+  });
+
+  /* the key hint fades out of the way once the deck is running */
+  var hint = document.getElementById('hint'), hintT;
+  function nudgeHint(){
+    hint.classList.remove('dim');
+    clearTimeout(hintT);
+    hintT = setTimeout(function(){ hint.classList.add('dim'); }, 4000);
+  }
+  document.addEventListener('mousemove', nudgeHint);
+  nudgeHint();
+
+  show(parseInt((location.hash || '#0').slice(1), 10) || 0);
+})();
+</script>
+<style>
+/* Normalise the Latin kickers: the deck was authored in four passes and each
+   picked its own tracking (.055 / .16 / .24em) and weight. Last in document
+   order, and specificity 0,3,0 so it also beats `.mb .kicker.mb-lat`. */
+.slide .hd .kicker{font-size:23px;font-weight:400;letter-spacing:.18em;
+  text-transform:uppercase}
+</style>
+</body>
+</html>

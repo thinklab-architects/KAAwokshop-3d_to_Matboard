@@ -1,5 +1,9 @@
 # 建材彙整 · Matboard
 
+> 本專案由 **王澄音** 開發，為 **高雄建築師公會 KAA AI WORKSHOP** 的示範檔案。
+>
+> 說明網站（簡報）：<https://thinklab-architects.github.io/KAAwokshop-3d_to_Matboard/>
+
 上傳 SketchUp `.skp` 專案模型，網站直接解析檔案，擷取每個面的**材質、位置與尺寸**，
 在 3D 預覽中點選任一牆面／地板／屋頂，即顯示該區塊的材質名稱與長、寬、面積。
 
